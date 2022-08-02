@@ -178,8 +178,6 @@ if __name__ == '__main__':
                     mod = 5
                 elif kernalSize == '4x4':
                     mod = 4
-                column = 0
-                row = 0
                 tempArray = []
                 for k, v in values.items():
                     if type(k) == int:
@@ -189,7 +187,7 @@ if __name__ == '__main__':
                             tempArray=[]
 
                 image = processImage(sys.argv[1])
-                output = convolve2D(image, kernelArray, padding=2)
+                output = convolve2D(image, kernelArray, padding, strides)
         except:
             print('Error')
 
