@@ -189,7 +189,7 @@ if __name__ == '__main__':
                             tempArray=[]
 
                 image = processImage(sys.argv[1])
-                output = convolve2D(image, kernel, padding=2)
+                output = convolve2D(image, kernelArray, padding=2)
         except:
             print('Error')
 
