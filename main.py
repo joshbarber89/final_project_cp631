@@ -85,91 +85,93 @@ if __name__ == '__main__':
     window = sg.Window('Window Title', layout)
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
-        event, values = window.read()
-        kernalSize = values['size'][0]
-        padding = int(values['padding'])
-        strides = int(values['strides'])
-        if event == 'size':
-            if kernalSize == '3x3':
-                kernel = [
-                    [sg.InputText(-1, size=(2,1)),
-                        sg.InputText(-1, size=(2,1)),
-                        sg.InputText(-1, size=(2,1))],
-                    [sg.InputText(-1, size=(2,1)),
-                        sg.InputText(8, size=(2,1)),
-                        sg.InputText(-1, size=(2,1))],
-                    [sg.InputText(-1, size=(2,1)),
-                        sg.InputText(-1, size=(2,1)),
-                        sg.InputText(-1, size=(2,1))]
-                    ]
-            elif kernalSize == '4x4':
-                kernel = [
-                    [sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1))],
-                    [sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1))],
-                    [sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1))],
-                    [sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1))]
-                    ]
-            elif kernalSize == '5x5':
-                kernel = [
-                    [sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1))],
-                    [sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1))],
-                    [sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1))],
-                    [sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1))],
-                    [sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1)),
-                        sg.InputText(0,size=(2,1))]
-                    ]
-            layout = [
-                [sg.Text('Padding')],
-                [sg.InputText(0, size=(2,1), key='padding')],
-                [sg.Text('Strides')],
-                [sg.InputText(1, size=(2,1), key='strides')],
-                [sg.Text('Select Kernel Size')],
-                [sg.Listbox(['3x3','4x4','5x5'], enable_events=True, size=(8, 3), key='size', default_values=kernalSize)],
-                [sg.Text('Kernel')],
-                kernel,
-                [sg.Button('Start Convolution', key='start'), sg.Button('Cancel')] ]
-            newWindow = sg.Window('Window Title').Layout(layout)
-            window.Close()
-            window = newWindow
-            window.finalize()
-            window['size'].set_value(kernalSize)
-            window['padding'].update(padding)
-            window['strides'].update(strides)
-        if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
-            break
-        if event == 'start':
-            try:
+        try:
+            event, values = window.read()
+            kernalSize = values['size'][0]
+            padding = int(values['padding'])
+            strides = int(values['strides'])
+            if event == 'size':
+                if kernalSize == '3x3':
+                    kernel = [
+                        [sg.InputText(-1, size=(2,1)),
+                            sg.InputText(-1, size=(2,1)),
+                            sg.InputText(-1, size=(2,1))],
+                        [sg.InputText(-1, size=(2,1)),
+                            sg.InputText(8, size=(2,1)),
+                            sg.InputText(-1, size=(2,1))],
+                        [sg.InputText(-1, size=(2,1)),
+                            sg.InputText(-1, size=(2,1)),
+                            sg.InputText(-1, size=(2,1))]
+                        ]
+                elif kernalSize == '4x4':
+                    kernel = [
+                        [sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1))],
+                        [sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1))],
+                        [sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1))],
+                        [sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1))]
+                        ]
+                elif kernalSize == '5x5':
+                    kernel = [
+                        [sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1))],
+                        [sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1))],
+                        [sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1))],
+                        [sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1))],
+                        [sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1)),
+                            sg.InputText(0,size=(2,1))]
+                        ]
+                layout = [
+                    [sg.Text('Padding')],
+                    [sg.InputText(0, size=(2,1), key='padding')],
+                    [sg.Text('Strides')],
+                    [sg.InputText(1, size=(2,1), key='strides')],
+                    [sg.Text('Select Kernel Size')],
+                    [sg.Listbox(['3x3','4x4','5x5'], enable_events=True, size=(8, 3), key='size', default_values=kernalSize)],
+                    [sg.Text('Kernel')],
+                    kernel,
+                    [sg.Button('Start Convolution', key='start'), sg.Button('Cancel')] ]
+
+                newWindow = sg.Window('Window Title').Layout(layout)
+                window.Close()
+                window = newWindow
+                window.finalize()
+                window['size'].set_value(kernalSize)
+                window['padding'].update(padding)
+                window['strides'].update(strides)
+
+            if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
+                break
+            if event == 'start':
                 kernelArray = []
                 mod = 3
                 if (kernalSize == '5x5'):
@@ -186,14 +188,10 @@ if __name__ == '__main__':
                             kernelArray.append(tempArray)
                             tempArray=[]
 
-
-                # Grayscale Image
                 image = processImage(sys.argv[1])
-
-                # Convolve and Save Output
                 output = convolve2D(image, kernel, padding=2)
-            except:
-                print('Error')
+        except:
+            print('Error')
 
     window.close()
 
