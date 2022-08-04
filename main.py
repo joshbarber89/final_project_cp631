@@ -87,6 +87,10 @@ if __name__ == '__main__':
     while True:
         try:
             event, values = window.read()
+
+            if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
+                break
+
             kernalSize = values['size'][0]
             padding = int(values['padding'])
             strides = int(values['strides'])
@@ -168,9 +172,6 @@ if __name__ == '__main__':
                 window['size'].set_value(kernalSize)
                 window['padding'].update(padding)
                 window['strides'].update(strides)
-
-            if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
-                break
             if event == 'start':
                 kernelArray = []
                 mod = 3
@@ -185,11 +186,12 @@ if __name__ == '__main__':
                         if ((k + 1) % mod == 0 and k != 0):
                             kernelArray.append(tempArray)
                             tempArray=[]
-
-                image = processImage(sys.argv[1])
-                output = convolve2D(image, kernelArray, padding, strides)
-        except:
-            print('Error')
+                print(kernelArray)
+                #image = processImage(sys.argv[1])
+                #output = convolve2D(image, kernelArray, padding, strides)
+        except Exception as e:
+            print('Error: ', e)
+            break
 
     window.close()
 
