@@ -57,16 +57,15 @@ if __name__ == '__main__':
     size = comm.Get_size()
     rank = comm.Get_rank()
 
-    padding = 0
-    strides = 1
-    # Edge Detection Kernel
-    kernelArray = [[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]]
+    padding = None
+    strides = None
+    kernelBuff = np.empty(25, dtype=int)
+    kernalSize = None
 
     if rank == 0:
 
+        sg.theme('DarkAmber')
 
-        sg.theme('DarkAmber')   # Add a touch of color
-        # All the stuff inside your window.
         kernel = [
                     [sg.InputText(-1, size=(2,1)),
                         sg.InputText(-1, size=(2,1)),
@@ -89,14 +88,14 @@ if __name__ == '__main__':
                     kernel,
                     [sg.Button('Start Convolution', key='start'), sg.Button('Cancel')] ]
 
-        # Create the Window
-        window = sg.Window('Window Title', layout)
-        # Event Loop to process "events" and get the "values" of the inputs
+
+        window = sg.Window('Convolution', layout)
+
         while True:
             try:
                 event, values = window.read()
 
-                if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
+                if event == sg.WIN_CLOSED or event == 'Cancel':
                     break
 
                 kernalSize = values['size'][0]
@@ -181,29 +180,61 @@ if __name__ == '__main__':
                     window['padding'].update(padding)
                     window['strides'].update(strides)
                 if event == 'start':
-                    kernelArray = []
-                    mod = 3
-                    if (kernalSize == '5x5'):
-                        mod = 5
-                    elif kernalSize == '4x4':
-                        mod = 4
-                    tempArray = []
+                    sendData = []
                     for k, v in values.items():
                         if type(k) == int:
-                            tempArray.append(int(v))
-                            if ((k + 1) % mod == 0 and k != 0):
-                                kernelArray.append(tempArray)
-                                tempArray=[]
-                    print(kernelArray)
-                    comm.scatter(kernelArray, 0)
+                            sendData.append(int(v))
+                    kernelBuff = np.array(sendData)
                     break
             except Exception as e:
                 print('Error: ', e)
                 break
 
         window.close()
+
+    comm.Bcast([kernelBuff, MPI.INT] , root=0)
+    kernalSize = comm.bcast(kernalSize , root=0)
+    strides = comm.bcast(strides, root=0)
+    padding = comm.bcast(padding, root=0)
+
+
+
+
+    kernelArray = []
+    tempArray = []
+    count = 0
+
+    if kernalSize == '3x3':
+        mod = 3
+        for v in kernelBuff:
+            count = count + 1
+            if count > 9:
+                break
+            tempArray.append(v)
+            if (count % mod == 0):
+                kernelArray.append(tempArray)
+                tempArray=[]
+
+    elif kernalSize == '4x4':
+        mod = 4
+        for v in kernelBuff:
+            count = count + 1
+            if count > 16:
+                break
+            tempArray.append(v)
+            if (count % mod == 0):
+                kernelArray.append(tempArray)
+                tempArray=[]
+
     else:
-        comm.recv(kernelArray, 0)
+        mod = 5
+        for v in kernelBuff:
+            count = count + 1
+            tempArray.append(v)
+            if (count % mod == 0):
+                kernelArray.append(tempArray)
+                tempArray=[]
 
-print(kernelArray)
-
+    kernelArray = np.array(kernelArray)
+    print(rank)
+    print(kernelArray)
