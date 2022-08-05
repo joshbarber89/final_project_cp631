@@ -203,37 +203,28 @@ if __name__ == '__main__':
     kernelArray = []
     tempArray = []
     count = 0
-
+    mod = None
+    maxIndex = None
     if kernalSize == '3x3':
         mod = 3
-        for v in kernelBuff:
-            count = count + 1
-            if count > 9:
-                break
-            tempArray.append(v)
-            if (count % mod == 0):
-                kernelArray.append(tempArray)
-                tempArray=[]
+        maxIndex = 9
 
     elif kernalSize == '4x4':
         mod = 4
-        for v in kernelBuff:
-            count = count + 1
-            if count > 16:
-                break
-            tempArray.append(v)
-            if (count % mod == 0):
-                kernelArray.append(tempArray)
-                tempArray=[]
+        maxIndex = 16
 
     else:
         mod = 5
-        for v in kernelBuff:
-            count = count + 1
-            tempArray.append(v)
-            if (count % mod == 0):
-                kernelArray.append(tempArray)
-                tempArray=[]
+        maxIndex = 25
+
+    for v in kernelBuff:
+        count = count + 1
+        if count > maxIndex:
+            break
+        tempArray.append(v)
+        if (count % mod == 0):
+            kernelArray.append(tempArray)
+            tempArray=[]
 
     kernelArray = np.array(kernelArray)
     print(rank)
