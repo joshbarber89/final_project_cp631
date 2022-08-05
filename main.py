@@ -197,9 +197,6 @@ if __name__ == '__main__':
     strides = comm.bcast(strides, root=0)
     padding = comm.bcast(padding, root=0)
 
-
-
-
     kernelArray = []
     tempArray = []
     count = 0
@@ -227,5 +224,6 @@ if __name__ == '__main__':
             tempArray=[]
 
     kernelArray = np.array(kernelArray)
+
     print(rank)
     print(kernelArray)
