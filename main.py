@@ -1,68 +1,90 @@
 import cv2, sys
 import numpy as np
-import PySimpleGUI as sg
 from mpi4py import MPI
+import json
+from random import randrange
+import os
+
+def load_images_from_folder(folder):
+    images = []
+    for filename in os.listdir(folder):
+        img = cv2.imread(os.path.join(folder,filename))
+        if img is not None:
+            images.append(img)
+    return images
 
 def processImage(image):
-  image = cv2.imread(image)
+  #image = cv2.imread(image)
   image = cv2.cvtColor(src=image, code=cv2.COLOR_BGR2GRAY)
   return image
 
-
 def convolve2D(image, kernel, padding=0, strides=1):
-    # Cross Correlation
+    # Kernel
     kernel = np.flipud(np.fliplr(kernel))
 
-    # Gather Shapes of Kernel + Image + Padding
-    xKernShape = kernel.shape[0]
-    yKernShape = kernel.shape[1]
-    xImgShape = image.shape[0]
-    yImgShape = image.shape[1]
+    # Gather Image and Kernel Shapes
+    inputImageShapeY, inputImageShapeX = image.shape[1], image.shape[0]
+    kernelShapeY, kernelShapeX = kernel.shape[1], kernel.shape[0]
 
-    # Shape of Output Convolution
-    xOutput = int(((xImgShape - xKernShape + 2 * padding) / strides) + 1)
-    yOutput = int(((yImgShape - yKernShape + 2 * padding) / strides) + 1)
-    output = np.zeros((xOutput, yOutput))
+    # Output Convolution 2D
+    output = np.zeros((int(((inputImageShapeX - kernelShapeX + 2 * padding) / strides) + 1), int(((inputImageShapeY - kernelShapeY + 2 * padding) / strides) + 1)))
 
     # Apply Equal Padding to All Sides
-    if padding != 0:
-        imagePadded = np.zeros((image.shape[0] + padding*2, image.shape[1] + padding*2))
-        imagePadded[int(padding):int(-1 * padding), int(padding):int(-1 * padding)] = image
-        print(imagePadded)
+    if padding == 0:
+        paddedImage = image
     else:
-        imagePadded = image
+        paddedImage = np.zeros((padding*2 + image.shape[0], padding*2 + image.shape[1]))
+        paddedImage[int(padding):int(padding * -1), int(padding):int(padding * -1)] = image
 
-    # Iterate through image
+    # Iterate through whole image
     for y in range(image.shape[1]):
         # Exit Convolution
-        if y > image.shape[1] - yKernShape:
+        if image.shape[1] - kernelShapeY < y :
             break
         # Only Convolve if y has gone down by the specified Strides
-        if y % strides == 0:
+        if 0 == y % strides:
             for x in range(image.shape[0]):
-                # Go to next row once kernel is out of bounds
-                if x > image.shape[0] - xKernShape:
+                # Once kernel is out of bounds go to next row
+                if image.shape[0] - kernelShapeX < x:
                     break
                 try:
                     # Only Convolve if x has moved by the specified Strides
-                    if x % strides == 0:
-                        output[x, y] = (kernel * imagePadded[x: x + xKernShape, y: y + yKernShape]).sum()
+                    if 0 == x % strides:
+                        output[x, y] = (paddedImage[x: x + kernelShapeX, y: y + kernelShapeY] * kernel).sum()
                 except:
                     break
 
     return output
 
 if __name__ == '__main__':
+
+    # gui -> hideGUI / showGUI (default)
+    # kernalSize -> 3x3 (default) / 4x4 / 5x5
+    # kernal -> random / [x,x,x,x,x,x,x,x,x] / [-1,-1,-1,-1,8,-1,-1,-1,-1] (default)
+
+    arg_names = ['file', 'gui', 'kernalSize', 'kernal']
+    args = dict(zip(arg_names, sys.argv))
+
     comm = MPI.COMM_WORLD
-    size = comm.Get_size()
-    rank = comm.Get_rank()
+    comm_size = comm.Get_size()
+    comm_rank = comm.Get_rank()
 
     padding = None
     strides = None
-    kernelBuff = np.empty(25, dtype=int)
-    kernalSize = None
+    kernelBuff = None
 
-    if rank == 0:
+    kernalSize = args['kernalSize'] if "kernalSize" in args else '3x3'
+    gui = args['gui'] if 'gui' in args else 'showGUI'
+    kernal = np.array(json.loads(args['kernal'])) if 'kernal' in args and args['kernal'] != 'random' else np.random.uniform(-1, 1, 25)
+
+    if 'kernal' in args:
+        kernelBuff = kernal
+    else:
+        defaultBuff = np.array([-1,-1,-1,-1,8,-1,-1,-1,-1], dtype=int)
+        kernelBuff = np.concatenate((defaultBuff, np.zeros(16, dtype=int)), dtype=int)
+
+    if comm_rank == 0 and gui == 'showGUI':
+        import PySimpleGUI as sg
 
         sg.theme('DarkAmber')
 
@@ -192,10 +214,11 @@ if __name__ == '__main__':
 
         window.close()
 
-    comm.Bcast([kernelBuff, MPI.INT] , root=0)
-    kernalSize = comm.bcast(kernalSize , root=0)
-    strides = comm.bcast(strides, root=0)
-    padding = comm.bcast(padding, root=0)
+    if ('kernal' in args and args['kernal'] == 'random') or gui == 'showGUI':
+        comm.Bcast([kernelBuff, MPI.INT] , root=0)
+        kernalSize = comm.bcast(kernalSize , root=0)
+        strides = comm.bcast(strides, root=0)
+        padding = comm.bcast(padding, root=0)
 
     kernelArray = []
     tempArray = []
@@ -224,6 +247,45 @@ if __name__ == '__main__':
             tempArray=[]
 
     kernelArray = np.array(kernelArray)
+    finalData = None
+    numberOfImage = 0
 
-    print(rank)
-    print(kernelArray)
+    if comm_rank == 0:
+        images = load_images_from_folder('./images')
+        numberOfImage = len(images)
+
+
+    numberOfImage = comm.bcast(numberOfImage, 0)
+
+
+    start = MPI.Wtime()
+    if comm_rank == 0:
+        print('Kernal:')
+        print(kernelArray)
+        for image in images:
+            # Grayscale Image
+            image = processImage(image)
+            finalData = np.zeros((image.shape[0], image.shape[1]))
+            # Breakup image and send to processes
+            slices = np.vsplit(image, comm_size)
+            for i in range(1, comm_size):
+                comm.send(slices[i], dest = i, tag = i)
+
+
+            outList = []
+            tempOutList = []
+            for i in range(1, comm_size):
+                tempOutList.append(comm.recv(source = i, tag = i))
+            outList.append(convolve2D(slices[0], kernelArray, padding=0))
+            outList = outList + tempOutList
+            output = np.vstack(outList)
+            cv2.imwrite('./output/2DConvolved-'+str(randrange(10000,2000000))+'.jpg', output)
+
+        end = MPI.Wtime()
+        print("Seconds elapsed: {}".format(end-start))
+    else:
+        for i in range(0, numberOfImage):
+            received = comm.recv(source = 0, tag = comm_rank)
+            outputSegment = convolve2D(received, kernelArray, padding=0)
+            comm.send(outputSegment, dest = 0, tag = comm_rank)
+
