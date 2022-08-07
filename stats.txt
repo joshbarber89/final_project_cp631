@@ -1,0 +1,145 @@
+On 6 images that are 512x512
+
+64 processors:
+
+5x5 random
+Number of processors: 64, Standard algorithm seconds elapsed: 0.397851032
+Number of processors: 64, Cartesian topology algorithm seconds elapsed : 0.40949024199999995
+
+5x5 random
+Number of processors: 64, Standard algorithm seconds elapsed: 0.36991051
+Number of processors: 64, Cartesian topology algorithm seconds elapsed : 0.44660348799999994
+
+5x5 random
+Number of processors: 64, Standard algorithm seconds elapsed: 0.363175638
+Number of processors: 64, Cartesian topology algorithm seconds elapsed : 0.454835771
+
+4x4 random
+Number of processors: 64, Standard algorithm seconds elapsed: 0.488341892
+Number of processors: 64, Cartesian topology algorithm seconds elapsed : 0.49761334
+
+4x4 random
+Number of processors: 64, Standard algorithm seconds elapsed: 0.480258203
+Number of processors: 64, Cartesian topology algorithm seconds elapsed : 0.459410653
+
+4x4 random
+Number of processors: 64, Standard algorithm seconds elapsed: 0.461809131
+Number of processors: 64, Cartesian topology algorithm seconds elapsed : 0.43803573500000004
+
+3x3 random
+Number of processors: 64, Standard algorithm seconds elapsed: 0.510512119
+Number of processors: 64, Cartesian topology algorithm seconds elapsed : 0.448617414
+
+3x3 random
+Number of processors: 64, Standard algorithm seconds elapsed: 0.517305512
+Number of processors: 64, Cartesian topology algorithm seconds elapsed : 0.45896645199999997
+
+3x3 random
+Number of processors: 64, Standard algorithm seconds elapsed: 0.507077589
+Number of processors: 64, Cartesian topology algorithm seconds elapsed : 0.46118569099999995
+
+
+16 processors:
+
+5x5 random
+Number of processors: 16, Standard algorithm seconds elapsed: 0.837079409
+Number of processors: 16, Cartesian topology algorithm seconds elapsed : 0.5230682439999998
+
+5x5 random
+Number of processors: 16, Standard algorithm seconds elapsed: 0.8375850380000001
+Number of processors: 16, Cartesian topology algorithm seconds elapsed : 0.534048951
+
+5x5 random
+Number of processors: 16, Standard algorithm seconds elapsed: 0.915096112
+Number of processors: 16, Cartesian topology algorithm seconds elapsed : 0.5857116769999999
+
+4x4 random
+Number of processors: 16, Standard algorithm seconds elapsed: 0.898523516
+Number of processors: 16, Cartesian topology algorithm seconds elapsed : 0.523866289
+
+4x4 random
+Number of processors: 16, Standard algorithm seconds elapsed: 0.852489473
+Number of processors: 16, Cartesian topology algorithm seconds elapsed : 0.49496629300000006
+
+4x4 random
+Number of processors: 16, Standard algorithm seconds elapsed: 0.851343827
+Number of processors: 16, Cartesian topology algorithm seconds elapsed : 0.506519699
+
+3x3 random
+Number of processors: 16, Standard algorithm seconds elapsed: 0.869346539
+Number of processors: 16, Cartesian topology algorithm seconds elapsed : 0.5304324499999999
+
+3x3 random
+Number of processors: 16, Standard algorithm seconds elapsed: 0.865342986
+Number of processors: 16, Cartesian topology algorithm seconds elapsed : 0.5073437460000001
+
+3x3 random
+Number of processors: 16, Standard algorithm seconds elapsed: 0.854279121
+Number of processors: 16, Cartesian topology algorithm seconds elapsed : 0.4864259080000002
+
+4 processors:
+
+5x5 random
+Number of processors: 4, Standard algorithm seconds elapsed: 3.13139569
+Number of processors: 4, Cartesian topology algorithm seconds elapsed : 1.6081010709999997
+
+5x5
+Number of processors: 4, Standard algorithm seconds elapsed: 3.194449053
+Number of processors: 4, Cartesian topology algorithm seconds elapsed : 1.649742828
+
+5x5
+Number of processors: 4, Standard algorithm seconds elapsed: 3.564387686
+Number of processors: 4, Cartesian topology algorithm seconds elapsed : 2.1040828620000003
+
+4x4
+Number of processors: 4, Standard algorithm seconds elapsed: 3.161622528
+Number of processors: 4, Cartesian topology algorithm seconds elapsed : 1.6673723910000002
+
+4x4
+Number of processors: 4, Standard algorithm seconds elapsed: 3.175514628
+Number of processors: 4, Cartesian topology algorithm seconds elapsed : 1.6575839730000004
+
+4x4
+Number of processors: 4, Standard algorithm seconds elapsed: 3.180370784
+Number of processors: 4, Cartesian topology algorithm seconds elapsed : 1.6710803200000002
+
+3x3
+Number of processors: 4, Standard algorithm seconds elapsed: 3.131207792
+Number of processors: 4, Cartesian topology algorithm seconds elapsed : 1.6513269420000003
+
+3x3
+Number of processors: 4, Standard algorithm seconds elapsed: 3.38205622
+Number of processors: 4, Cartesian topology algorithm seconds elapsed : 1.7249240429999997
+
+3x3
+Number of processors: 4, Standard algorithm seconds elapsed: 3.151718153
+Number of processors: 4, Cartesian topology algorithm seconds elapsed : 1.637082381
+
+1 processor:
+
+5x5
+Number of processors: 1, Standard algorithm seconds elapsed: 6.044323672
+
+5x5
+Number of processors: 1, Standard algorithm seconds elapsed: 6.041612337
+
+5x5
+Number of processors: 1, Standard algorithm seconds elapsed: 5.974626293
+
+4x4
+Number of processors: 1, Standard algorithm seconds elapsed: 6.419046146
+
+4x4
+Number of processors: 1, Standard algorithm seconds elapsed: 6.183864495
+
+4x4
+Number of processors: 1, Standard algorithm seconds elapsed: 6.000894739
+
+3x3
+Number of processors: 1, Standard algorithm seconds elapsed: 6.258550919
+
+3x3
+Number of processors: 1, Standard algorithm seconds elapsed: 6.168675099
+
+3x3
+Number of processors: 1, Standard algorithm seconds elapsed: 5.862917365
