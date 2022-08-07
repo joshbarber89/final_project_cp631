@@ -71,12 +71,13 @@ def convolve2D(image, kernel, padding=0, strides=1):
 
 if __name__ == '__main__':
 
+    # algorithm -> 1 / 2 / both
     # gui -> hideGUI / showGUI (default)
     # kernalSize -> 3x3 (default) / 4x4 / 5x5
     # kernal -> random / [x,x,x,x,x,x,x,x,x] / [-1,-1,-1,-1,8,-1,-1,-1,-1] (default)
 
     # Command line arguements, first argument is the file, then gui, then kernal size, then kernal
-    arg_names = ['file', 'gui', 'kernalSize', 'kernal']
+    arg_names = ['file', 'algorithm', 'gui', 'kernalSize', 'kernal']
     args = dict(zip(arg_names, sys.argv))
 
     # Get basic MPI communications, size and rank
@@ -87,6 +88,8 @@ if __name__ == '__main__':
     # Is the kernel, but in 1 dimension
     kernelBuff = None
 
+    # Which algorithm is going to be used
+    algorithm = args['algorithm'] if 'algorithm' in args else '1'
     # Get kernal size, defaults to 3x3
     kernalSize = args['kernalSize'] if "kernalSize" in args else '3x3'
     # Get GUI, default shows (showGUI arg). hideGUI in terminal arguments to not show it
@@ -274,55 +277,58 @@ if __name__ == '__main__':
         print('Kernal:')
         print(kernelArray)
 
-    # Broadcast out the number of images, for iterative purposes later
-    numberOfImages = comm.bcast(numberOfImages, 0)
-    try:
-        if comm_rank == 0:
-            # Start time
-            start = MPI.Wtime()
-            # Work on one image at a time
-            for image in images:
-                # Grayscale Image
-                image = processImage(image)
-                # Buffer
-                finalData = np.zeros((image.shape[0], image.shape[1]))
-                # Breakup image and send to processes
-                slices = np.vsplit(image, comm_size)
-                # Send out all slices to the other processors
-                for i in range(1, comm_size):
-                    comm.send(slices[i], dest = i, tag = i)
+    if algorithm == '1' or algorithm == 'both':
+        # Broadcast out the number of images, for iterative purposes later
+        numberOfImages = comm.bcast(numberOfImages, 0)
+        try:
+            if comm_rank == 0:
+                # Start time
+                start = MPI.Wtime()
+                # Work on one image at a time
+                for image in images:
+                    # Grayscale Image
+                    image = processImage(image)
+                    # Buffer
+                    finalData = np.zeros((image.shape[0], image.shape[1]))
+                    # Breakup image and send to processes
+                    slices = np.vsplit(image, comm_size)
+                    # Send out all slices to the other processors
+                    for i in range(1, comm_size):
+                        comm.send(slices[i], dest = i, tag = i)
 
-                # The vertical stacked final array
-                outList = []
-                tempOutList = []
-                for i in range(1, comm_size):
-                    # Receive back the work from the other processors
-                    tempOutList.append(comm.recv(source = i, tag = i))
-                # Add process 0 to the vertical stacked final array first
-                outList.append(convolve2D(slices[0], kernelArray, padding=0))
-                # Then add the rest of the work done by the rest of the processors
-                outList = outList + tempOutList
-                # Stack it together for final output
-                output = np.vstack(outList)
-                # Write to output folder
-                cv2.imwrite('./output/Standard-'+str(randrange(10000,2000000))+'.jpg', output)
+                    # The vertical stacked final array
+                    outList = []
+                    tempOutList = []
+                    for i in range(1, comm_size):
+                        # Receive back the work from the other processors
+                        tempOutList.append(comm.recv(source = i, tag = i))
+                    # Add process 0 to the vertical stacked final array first
+                    outList.append(convolve2D(slices[0], kernelArray, padding=0))
+                    # Then add the rest of the work done by the rest of the processors
+                    outList = outList + tempOutList
+                    # Stack it together for final output
+                    output = np.vstack(outList)
+                    # Write to output folder
+                    cv2.imwrite('./output/Standard-'+str(randrange(10000,2000000))+'.jpg', output)
 
-            end = MPI.Wtime()
-            print("Number of processors: {}, Standard algorithm seconds elapsed: {}".format(comm_size,end-start))
-        else:
-            for i in range(0, numberOfImages):
-                # For each image receive the slice from processor 0
-                received = comm.recv(source = 0, tag = comm_rank)
-                # Do the work
-                outputSegment = convolve2D(received, kernelArray, padding=0)
-                # Then send it back to processor 0
-                comm.send(outputSegment, dest = 0, tag = comm_rank)
+                end = MPI.Wtime()
+                print("Number of processors: {}, Standard algorithm seconds elapsed: {}".format(comm_size,end-start))
+            else:
+                for i in range(0, numberOfImages):
+                    # For each image receive the slice from processor 0
+                    received = comm.recv(source = 0, tag = comm_rank)
+                    # Do the work
+                    outputSegment = convolve2D(received, kernelArray, padding=0)
+                    # Then send it back to processor 0
+                    comm.send(outputSegment, dest = 0, tag = comm_rank)
 
-    except Exception as e:
-        print('Can\'t split image size evenly with the number of processors. The images are 512x512: ',e)
+        except Exception as e:
+            if comm_rank == 0:
+                print('Can\'t split image size evenly with the number of processors. The images are 512x512: ',e)
+                comm.Abort()
 
     # This algorithm only works if the number of processors can have a perfect square
-    if isSquare(comm_size):
+    if isSquare(comm_size) and (algorithm == '2' or algorithm == 'both'):
         # Algorithm 1 done, wait for all processors for Algorithm 2
         comm.Barrier()
 
@@ -396,4 +402,5 @@ if __name__ == '__main__':
             end = MPI.Wtime()
             print("Number of processors: {}, Cartesian topology algorithm seconds elapsed : {}".format(comm_size,end-start))
     else:
-        print('Sorry, the number of processors have to be a perfect square. 4, 16, 25')
+        if comm_rank == 0:
+            print('Sorry, the number of processors have to be a perfect square. 4, 16, 25')
