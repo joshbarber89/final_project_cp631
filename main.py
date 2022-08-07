@@ -6,6 +6,17 @@ from random import randrange
 import os
 import math
 
+# Determine if a number is a whole square root
+def isSquare(number):
+  x = number // 2
+  seen = set([x])
+  while x * x != number:
+    x = (x + (number // x)) // 2
+    if x in seen: return False
+    seen.add(x)
+  return True
+
+# Load all images from the designated folder specified
 def loadImagesFromFolder(folder):
     images = []
     for filename in os.listdir(folder):
@@ -14,10 +25,12 @@ def loadImagesFromFolder(folder):
             images.append(img)
     return images
 
+# Process the image, just GrayScaling it here
 def processImage(image):
   image = cv2.cvtColor(src=image, code=cv2.COLOR_BGR2GRAY)
   return image
 
+# The Convolution Algorithm
 def convolve2D(image, kernel, padding=0, strides=1):
     # Kernel
     kernel = np.flipud(np.fliplr(kernel))
@@ -305,74 +318,77 @@ if __name__ == '__main__':
             # Then send it back to processor 0
             comm.send(outputSegment, dest = 0, tag = comm_rank)
 
-    # Algorithm 1 done, wait for all processors for Algorithm 2
-    comm.Barrier()
+    # This algorithm only works if the number of processors can have a perfect square
+    if isSquare(comm_size):
+        # Algorithm 1 done, wait for all processors for Algorithm 2
+        comm.Barrier()
 
-    # Give all processors the images
-    images = comm.bcast(images, root = 0)
+        # Give all processors the images
+        images = comm.bcast(images, root = 0)
 
-    # For stats
-    if comm_rank == 0:
-        start = MPI.Wtime()
-
-    for image in images:
-        # Get the square root dimensions for cartology purposes
-        sq_dim = int(math.sqrt(comm_size) if comm_size > 2 else comm_size)
-
-        # Split the image into nprocessor slices vertically and nprocessor slices horizontally on processor 0
-        slicesXY = []
+        # For stats
         if comm_rank == 0:
-            slicesX = np.vsplit(processImage(image), sq_dim )
+            start = MPI.Wtime()
+
+
+        for image in images:
+            # Get the square root dimensions for cartology purposes
+            sq_dim = int(math.sqrt(comm_size) if comm_size > 2 else comm_size)
+
+            # Split the image into nprocessor slices vertically and nprocessor slices horizontally on processor 0
             slicesXY = []
-            for x in slicesX:
-                slicesXY.append(np.hsplit(x, sq_dim ))
-            slicesXY = np.array(slicesXY)
+            if comm_rank == 0:
+                slicesX = np.vsplit(processImage(image), sq_dim )
+                slicesXY = []
+                for x in slicesX:
+                    slicesXY.append(np.hsplit(x, sq_dim ))
+                slicesXY = np.array(slicesXY)
 
-        # Broadcast the data to all processors
-        slicesXY = comm.bcast(slicesXY, root = 0)
+            # Broadcast the data to all processors
+            slicesXY = comm.bcast(slicesXY, root = 0)
 
-        # Create the Cartesian topology, nprocessor = 16, cart is 4x4. nprocesssor = 4 cart is 2x2
-        cartesian2d = comm.Create_cart(dims = [sq_dim, sq_dim] ,periods = None ,reorder=False)
-        # Get assigned coordinates to each processor
-        coord2d = cartesian2d.Get_coords(comm_rank)
-        # Grab a slice of the image
-        slice = slicesXY[coord2d[0]][coord2d[1]]
-        # Run the 2d convolution on the slice
-        outputSegment = convolve2D(slice, kernelArray, padding=0)
+            # Create the Cartesian topology, nprocessor = 16, cart is 4x4. nprocesssor = 4 cart is 2x2
+            cartesian2d = comm.Create_cart(dims = [sq_dim, sq_dim] ,periods = None ,reorder=False)
+            # Get assigned coordinates to each processor
+            coord2d = cartesian2d.Get_coords(comm_rank)
+            # Grab a slice of the image
+            slice = slicesXY[coord2d[0]][coord2d[1]]
+            # Run the 2d convolution on the slice
+            outputSegment = convolve2D(slice, kernelArray, padding=0)
 
+            if comm_rank == 0:
+                # Create a buffer to eventually set the data
+                data = np.zeros((sq_dim, sq_dim, outputSegment.shape[0], outputSegment.shape[1]), dtype=int)
+
+                # Assign processor 0's work to 0,0 coords
+                data[0, 0] = np.array(outputSegment)
+                x = 0
+                y = 0
+                newImage = []
+                yStack = []
+                # Retreive the data that has been worked on
+                for i in range(1, comm_size):
+                    # Get the coords to the specific processor
+                    x, y = cartesian2d.Get_coords(i)
+                    # Depending on the coords, set the data back
+                    data[x, y] = comm.recv(source = i, tag = i)
+
+                # Have to unsplit the data, that was previously split to hand off to other processors
+                for x in range(0,sq_dim):
+                    tempArray = []
+                    for y in range(0,sq_dim):
+                        tempArray.append(data[x,y])
+                    yStack.append(np.hstack(tempArray))
+                # Have the image back intact with the convolution algorithm affecting it
+                newImage = np.vstack(yStack)
+                # Write out the image to output folder
+                cv2.imwrite('./output/CartTop-'+str(randrange(10000,2000000))+'.jpg', newImage)
+
+            else:
+                # Send that slice to processor 0
+                comm.send(outputSegment, dest = 0, tag = comm_rank)
+
+        # Stats
         if comm_rank == 0:
-            # Create a buffer to eventually set the data
-            data = np.zeros((sq_dim, sq_dim, outputSegment.shape[0], outputSegment.shape[1]), dtype=int)
-
-            # Assign processor 0's work to 0,0 coords
-            data[0, 0] = np.array(outputSegment)
-            x = 0
-            y = 0
-            newImage = []
-            yStack = []
-            # Retreive the data that has been worked on
-            for i in range(1, comm_size):
-                # Get the coords to the specific processor
-                x, y = cartesian2d.Get_coords(i)
-                # Depending on the coords, set the data back
-                data[x, y] = comm.recv(source = i, tag = i)
-
-            # Have to unsplit the data, that was previously split to hand off to other processors
-            for x in range(0,sq_dim):
-                tempArray = []
-                for y in range(0,sq_dim):
-                    tempArray.append(data[x,y])
-                yStack.append(np.hstack(tempArray))
-            # Have the image back intact with the convolution algorithm affecting it
-            newImage = np.vstack(yStack)
-            # Write out the image to output folder
-            cv2.imwrite('./output/CartTop-'+str(randrange(10000,2000000))+'.jpg', newImage)
-
-        else:
-            # Send that slice to processor 0
-            comm.send(outputSegment, dest = 0, tag = comm_rank)
-
-    # Stats
-    if comm_rank == 0:
-        end = MPI.Wtime()
-        print("Number of processors: {}, Cartesian topology algorithm seconds elapsed : {}".format(comm_size,end-start))
+            end = MPI.Wtime()
+            print("Number of processors: {}, Cartesian topology algorithm seconds elapsed : {}".format(comm_size,end-start))
