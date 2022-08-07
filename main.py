@@ -347,11 +347,15 @@ if __name__ == '__main__':
             # Split the image into nprocessor slices vertically and nprocessor slices horizontally on processor 0
             slicesXY = []
             if comm_rank == 0:
-                slicesX = np.vsplit(processImage(image), sq_dim )
-                slicesXY = []
-                for x in slicesX:
-                    slicesXY.append(np.hsplit(x, sq_dim ))
-                slicesXY = np.array(slicesXY)
+                try:
+                    slicesX = np.vsplit(processImage(image), sq_dim )
+                    slicesXY = []
+                    for x in slicesX:
+                        slicesXY.append(np.hsplit(x, sq_dim ))
+                    slicesXY = np.array(slicesXY)
+                except Exception as e:
+                    print('Can\'t split image size evenly with the number of processors. The images are 512x512: ',e)
+                    comm.Abort()
 
             # Broadcast the data to all processors
             slicesXY = comm.bcast(slicesXY, root = 0)
