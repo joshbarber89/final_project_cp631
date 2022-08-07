@@ -64,7 +64,7 @@ def convolve2D(image, kernel):
 
 if __name__ == '__main__':
 
-    # algorithm -> 1 / 2 / both
+    # algorithm -> 1 / 2 / both (default)
     # gui -> hideGUI / showGUI (default)
     # kernalSize -> 3x3 (default) / 4x4 / 5x5
     # kernal -> random / [x,x,x,x,x,x,x,x,x] / [-1,-1,-1,-1,8,-1,-1,-1,-1] (default)
