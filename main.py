@@ -396,4 +396,5 @@ if __name__ == '__main__':
             end = MPI.Wtime()
             print("Number of processors: {}, Cartesian topology algorithm seconds elapsed : {}".format(comm_size,end-start))
     else:
-        print('Sorry, the number of processors have to be a perfect square. 4, 16, 25')
+        if comm_rank == 0:
+            print('Sorry, the number of processors have to be a perfect square. 4, 16, 25')
