@@ -31,7 +31,7 @@ def processImage(image):
   return image
 
 # The Convolution Algorithm
-def convolve2D(image, kernel, padding=0, strides=1):
+def convolve2D(image, kernel):
     # Kernel
     kernel = np.flipud(np.fliplr(kernel))
 
@@ -40,14 +40,7 @@ def convolve2D(image, kernel, padding=0, strides=1):
     kernelShapeY, kernelShapeX = kernel.shape[1], kernel.shape[0]
 
     # Output Convolution 2D
-    output = np.zeros((int(((inputImageShapeX - kernelShapeX + 2 * padding) / strides) + 1), int(((inputImageShapeY - kernelShapeY + 2 * padding) / strides) + 1)))
-
-    # Apply Equal Padding to All Sides
-    if padding == 0:
-        paddedImage = image
-    else:
-        paddedImage = np.zeros((padding*2 + image.shape[0], padding*2 + image.shape[1]))
-        paddedImage[int(padding):int(padding * -1), int(padding):int(padding * -1)] = image
+    output = np.zeros((int(inputImageShapeX), int(inputImageShapeY)))
 
     # Iterate through whole image
     for y in range(image.shape[1]):
@@ -55,15 +48,15 @@ def convolve2D(image, kernel, padding=0, strides=1):
         if image.shape[1] - kernelShapeY < y :
             break
         # Only Convolve if y has gone down by the specified Strides
-        if 0 == y % strides:
+        if 0 == y % 1:
             for x in range(image.shape[0]):
                 # Once kernel is out of bounds go to next row
                 if image.shape[0] - kernelShapeX < x:
                     break
                 try:
                     # Only Convolve if x has moved by the specified Strides
-                    if 0 == x % strides:
-                        output[x, y] = (paddedImage[x: x + kernelShapeX, y: y + kernelShapeY] * kernel).sum()
+                    if 0 == x % 1:
+                        output[x, y] = (image[x: x + kernelShapeX, y: y + kernelShapeY] * kernel).sum()
                 except:
                     break
 
@@ -303,7 +296,7 @@ if __name__ == '__main__':
                         # Receive back the work from the other processors
                         tempOutList.append(comm.recv(source = i, tag = i))
                     # Add process 0 to the vertical stacked final array first
-                    outList.append(convolve2D(slices[0], kernelArray, padding=0))
+                    outList.append(convolve2D(slices[0], kernelArray))
                     # Then add the rest of the work done by the rest of the processors
                     outList = outList + tempOutList
                     # Stack it together for final output
@@ -318,7 +311,7 @@ if __name__ == '__main__':
                     # For each image receive the slice from processor 0
                     received = comm.recv(source = 0, tag = comm_rank)
                     # Do the work
-                    outputSegment = convolve2D(received, kernelArray, padding=0)
+                    outputSegment = convolve2D(received, kernelArray)
                     # Then send it back to processor 0
                     comm.send(outputSegment, dest = 0, tag = comm_rank)
 
@@ -367,7 +360,7 @@ if __name__ == '__main__':
             # Grab a slice of the image
             slice = slicesXY[coord2d[0]][coord2d[1]]
             # Run the 2d convolution on the slice
-            outputSegment = convolve2D(slice, kernelArray, padding=0)
+            outputSegment = convolve2D(slice, kernelArray)
 
             if comm_rank == 0:
                 # Create a buffer to eventually set the data
